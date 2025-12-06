@@ -30,6 +30,7 @@ import { unlock } from '../../lock-unlock';
 import { deviceTypeKey } from '../../store/private-keys';
 import BlockToolbarIcon from './block-toolbar-icon';
 import { hasViewportBlockStyleState } from '../../hooks/block-style-state';
+import BlockValidationIndicator from '../block-validation-indicator';
 
 /**
  * Renders the block toolbar.
@@ -238,6 +239,11 @@ export function PrivateBlockToolbar( {
 								clientIds={ blockClientIds }
 								isSynced={ isSynced }
 							/>
+							{ ! isMultiToolbar && (
+								<BlockValidationIndicator
+									clientId={ blockClientId }
+								/>
+							) }
 							{ ! isPlaceholder &&
 								isDefaultEditingMode &&
 								showBlockVisibilityButton && (
