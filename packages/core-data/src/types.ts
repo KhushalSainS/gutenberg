@@ -600,7 +600,7 @@ export interface BatchActions {
 	saveEditedEntityRecord: (
 		kind: string,
 		name: string,
-		recordId: string | number,
+		recordId?: string | number,
 		options?: SaveEntityRecordOptions
 	) => Promise< unknown >;
 	deleteEntityRecord: (
