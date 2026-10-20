@@ -13,6 +13,7 @@ import logEntityDeprecation from './utils/log-entity-deprecation';
 import type * as ET from './entity-types';
 import type { QueriedItem, QueriedMeta, Query } from './queried-data/types';
 import type {
+	ActionOf,
 	BatchActions,
 	CoreDataThunkArgs,
 	DeleteEntityRecordOptions,
@@ -42,8 +43,8 @@ function addTitleToAutoDraft( record: object ): object {
  */
 export function receiveUserQuery(
 	queryID: string,
-	users: ET.User< 'edit' > | Array< ET.User< 'edit' > >
-) {
+	users: ET.User< 'view' > | Array< ET.User< 'view' > >
+): ActionOf< 'RECEIVE_USER_QUERY' > {
 	return {
 		type: 'RECEIVE_USER_QUERY',
 		users: Array.isArray( users ) ? users : [ users ],
@@ -61,7 +62,9 @@ export function receiveUserQuery(
  *
  * @return Action object.
  */
-export function receiveCurrentUser( currentUser: ET.User< 'view' > ) {
+export function receiveCurrentUser(
+	currentUser: ET.User< 'view' >
+): ActionOf< 'RECEIVE_CURRENT_USER' > {
 	return {
 		type: 'RECEIVE_CURRENT_USER',
 		currentUser,
@@ -75,7 +78,9 @@ export function receiveCurrentUser( currentUser: ET.User< 'view' > ) {
  *
  * @return Action object.
  */
-export function addEntities( entities: Array< EntityConfig > ) {
+export function addEntities(
+	entities: Array< EntityConfig >
+): ActionOf< 'ADD_ENTITIES' > {
 	return {
 		type: 'ADD_ENTITIES',
 		entities,
@@ -148,7 +153,7 @@ export function receiveEntityRecords(
  */
 export function receiveCurrentTheme(
 	currentTheme: Pick< ET.Theme, 'stylesheet' >
-) {
+): ActionOf< 'RECEIVE_CURRENT_THEME' > {
 	return {
 		type: 'RECEIVE_CURRENT_THEME',
 		currentTheme,
@@ -167,7 +172,7 @@ export function receiveCurrentTheme(
  */
 export function __experimentalReceiveCurrentGlobalStylesId(
 	currentGlobalStylesId: number
-) {
+): ActionOf< 'RECEIVE_CURRENT_GLOBAL_STYLES_ID' > {
 	return {
 		type: 'RECEIVE_CURRENT_GLOBAL_STYLES_ID',
 		id: currentGlobalStylesId,
@@ -188,7 +193,7 @@ export function __experimentalReceiveCurrentGlobalStylesId(
 export function __experimentalReceiveThemeBaseGlobalStyles(
 	stylesheet: string,
 	globalStyles: object
-) {
+): ActionOf< 'RECEIVE_THEME_GLOBAL_STYLES' > {
 	return {
 		type: 'RECEIVE_THEME_GLOBAL_STYLES',
 		stylesheet,
@@ -210,7 +215,7 @@ export function __experimentalReceiveThemeBaseGlobalStyles(
 export function __experimentalReceiveThemeGlobalStyleVariations(
 	stylesheet: string,
 	variations: Array< unknown >
-) {
+): ActionOf< 'RECEIVE_THEME_GLOBAL_STYLE_VARIATIONS' > {
 	return {
 		type: 'RECEIVE_THEME_GLOBAL_STYLE_VARIATIONS',
 		stylesheet,
@@ -225,7 +230,7 @@ export function __experimentalReceiveThemeGlobalStyleVariations(
  *
  * @return Action object.
  */
-export function receiveThemeSupports() {
+export function receiveThemeSupports(): { type: 'DO_NOTHING' } {
 	deprecated( "wp.data.dispatch( 'core' ).receiveThemeSupports", {
 		since: '5.9',
 	} );
@@ -251,7 +256,7 @@ export function receiveThemeSupports() {
 export function receiveThemeGlobalStyleRevisions(
 	currentId: number,
 	revisions: Array< object >
-) {
+): ActionOf< 'RECEIVE_THEME_GLOBAL_STYLE_REVISIONS' > {
 	deprecated(
 		"wp.data.dispatch( 'core' ).receiveThemeGlobalStyleRevisions()",
 		{
@@ -278,7 +283,10 @@ export function receiveThemeGlobalStyleRevisions(
  *
  * @return Action object.
  */
-export function receiveEmbedPreview( url: string, preview: unknown ) {
+export function receiveEmbedPreview(
+	url: string,
+	preview: unknown
+): ActionOf< 'RECEIVE_EMBED_PREVIEW' > {
 	return {
 		type: 'RECEIVE_EMBED_PREVIEW',
 		url,
@@ -1027,7 +1035,9 @@ export const __experimentalSaveSpecifiedEntityEdits =
  *
  * @return Action object.
  */
-export function receiveUploadPermissions( hasUploadPermissions: boolean ) {
+export function receiveUploadPermissions(
+	hasUploadPermissions: boolean
+): ActionOf< 'RECEIVE_USER_PERMISSION' > {
 	deprecated( "wp.data.dispatch( 'core' ).receiveUploadPermissions", {
 		since: '5.9',
 		alternative: 'receiveUserPermission',
@@ -1048,7 +1058,10 @@ export function receiveUploadPermissions( hasUploadPermissions: boolean ) {
  *
  * @return Action object.
  */
-export function receiveUserPermission( key: string, isAllowed: boolean ) {
+export function receiveUserPermission(
+	key: string,
+	isAllowed: boolean
+): ActionOf< 'RECEIVE_USER_PERMISSION' > {
 	return {
 		type: 'RECEIVE_USER_PERMISSION',
 		key,
@@ -1073,7 +1086,7 @@ export function receiveUserPermission( key: string, isAllowed: boolean ) {
  */
 export function receiveUserPermissions(
 	permissions: Record< string, boolean >
-) {
+): ActionOf< 'RECEIVE_USER_PERMISSIONS' > {
 	return {
 		type: 'RECEIVE_USER_PERMISSIONS',
 		permissions,
@@ -1095,7 +1108,7 @@ export function receiveUserPermissions(
 export function receiveAutosaves(
 	postId: number,
 	autosaves: unknown | Array< unknown >
-) {
+): ActionOf< 'RECEIVE_AUTOSAVES' > {
 	return {
 		type: 'RECEIVE_AUTOSAVES',
 		postId,
@@ -1112,7 +1125,7 @@ export function receiveAutosaves(
  */
 export function receiveNavigationFallbackId(
 	fallbackId: number | null | undefined
-) {
+): ActionOf< 'RECEIVE_NAVIGATION_FALLBACK_ID' > {
 	return {
 		type: 'RECEIVE_NAVIGATION_FALLBACK_ID',
 		fallbackId,
@@ -1127,7 +1140,10 @@ export function receiveNavigationFallbackId(
  *
  * @return Action object.
  */
-export function receiveDefaultTemplateId( query: Query, templateId: string ) {
+export function receiveDefaultTemplateId(
+	query: Query,
+	templateId: string
+): ActionOf< 'RECEIVE_DEFAULT_TEMPLATE' > {
 	return {
 		type: 'RECEIVE_DEFAULT_TEMPLATE',
 		query,

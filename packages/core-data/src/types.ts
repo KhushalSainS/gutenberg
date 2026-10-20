@@ -407,7 +407,10 @@ export type Action =
 				recordKey?: ItemId;
 			} )
 	| ( ReceiveItemsAction & Partial< EntityActionTarget > )
-	| { type: 'RECEIVE_NAVIGATION_FALLBACK_ID'; fallbackId: ItemId | null }
+	| {
+			type: 'RECEIVE_NAVIGATION_FALLBACK_ID';
+			fallbackId: ItemId | null | undefined;
+	  }
 	| {
 			type: 'RECEIVE_REGISTERED_POST_META';
 			postType: string;
@@ -465,6 +468,14 @@ export type Action =
 			key: ItemId;
 			status: ConnectionStatus;
 	  };
+
+/**
+ * The store action of the given type.
+ */
+export type ActionOf< Type extends Action[ 'type' ] > = Extract<
+	Action,
+	{ type: Type }
+>;
 
 /**
  * An entity action, with the entity's record key that the entity reducer
