@@ -1013,20 +1013,24 @@ _Parameters_
 
 ### validateBlock
 
-Returns validation results for a parsed block. The validation system uses a 5-level classification to determine content integrity with varying degrees of confidence, from perfect match (ValidBlock) to requiring user intervention (InvalidBlock).
+Returns validation results for a parsed block. Validation classifies the block's content integrity into one of the `VALIDATION_LEVEL` levels, from a perfect match (`VALID_BLOCK`) to requiring user intervention (`INVALID_BLOCK`).
 
-Note: Level 1 (MigratedBlock) is handled by the parser during deprecation checks, not by this function. This function handles Levels 0, 2, 3, and 4.
+A block is considered valid when its content can be regenerated from its attributes without losing anything meaningful: the `save` output either matches the stored content, differs from it only in tag attributes, or differs structurally while preserving all of the visible text. Block types can opt out of the latter two with `allowsReconstruction: false`.
+
+Note: `MIGRATED_BLOCK` (Level 1) is assigned by the parser when a block deprecation matches, not by this function.
 
 _Parameters_
 
 - _block_ `Block`: Block object.
 - _blockTypeOrName_ `BlockType | string`: Block type or name, inferred from block if not given.
-- _options_ `{ log: boolean; }`: Validation options.
-- _options.log_ `{ log: boolean; }`: Whether to log Level 3 regenerations.
 
 _Returns_
 
-- `[ boolean, LoggerItem[], ValidationMetadata ]`: Validation results tuple: - isValid: boolean indicating if block is valid - issues: array of validation issues - metadata: object containing validationLevel, originalContent, generatedContent
+- `[ boolean, LoggerItem[], ValidationMetadata ]`: Validation results tuple: whether the block is valid, the validation issues found, and metadata with the validation level and the original and generated content.
+
+### VALIDATION_LEVEL
+
+Validation level constants ordered by decreasing certainty over content integrity. Lower numbers indicate higher confidence in content preservation.
 
 ### withBlockContentContext
 

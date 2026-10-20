@@ -43,7 +43,7 @@ function BlockHTML( { clientId } ) {
 
 		// If html is empty  we reset the block to the default HTML and mark it as valid to avoid triggering an error
 		const content = html ? html : getSaveContent( blockType, attributes );
-		const [ isValid ] = html
+		const [ isValid, , metadata ] = html
 			? validateBlock( {
 					...block,
 					attributes,
@@ -55,6 +55,7 @@ function BlockHTML( { clientId } ) {
 			attributes,
 			originalContent: content,
 			isValid,
+			validationLevel: metadata?.validationLevel,
 		} );
 
 		// Ensure the state is updated if we reset so it displays the default content.
