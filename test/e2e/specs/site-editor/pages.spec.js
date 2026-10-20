@@ -1,7 +1,5 @@
-/**
- * WordPress dependencies
- */
 const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
+const { openPostSummary } = require( '../editor/various/post-summary/utils' );
 
 /**
  * Activates a theme, retrying on the transient "socket hang up"
@@ -29,19 +27,20 @@ async function activateThemeWithRetry( requestUtils, themeSlug ) {
 	}
 }
 
-async function draftNewPage( page ) {
-	await page.getByRole( 'button', { name: 'Pages' } ).click();
-	await page.getByRole( 'button', { name: 'Add page' } ).click();
-	await page
-		.locator( 'role=dialog[name="Draft new: page"i]' )
-		.locator( 'role=textbox[name="title"i]' )
-		.fill( 'Test Page' );
-	await page.keyboard.press( 'Enter' );
-	await expect(
-		page.locator(
-			`role=button[name="Dismiss this notice"i] >> text='"Test Page" successfully created.'`
-		)
-	).toBeVisible();
+// Creating the page through the UI differs between the classic and the
+// extensible site editor (a naming dialog vs. a full "Add Page" editor
+// screen), and is not what these tests cover, so create it via REST and open
+// it in the editor directly.
+async function draftNewPage( admin, requestUtils ) {
+	const testPage = await requestUtils.createPage( {
+		title: 'Test Page',
+		status: 'draft',
+	} );
+	await admin.visitSiteEditor( {
+		postId: testPage.id,
+		postType: 'page',
+		canvas: 'edit',
+	} );
 }
 
 async function addPageContent( editor, page ) {
@@ -49,7 +48,7 @@ async function addPageContent( editor, page ) {
 		.getByRole( 'document', {
 			name: 'Block: Content',
 		} )
-		.getByRole( 'button', {
+		.getByRole( 'document', {
 			name: 'Add default block',
 		} )
 		.click();
@@ -119,11 +118,13 @@ test.describe( 'Pages', () => {
 	} );
 
 	test.skip( 'create a new page, edit template and toggle page template preview', async ( {
+		admin,
 		page,
 		editor,
+		requestUtils,
 	} ) => {
 		// Set up
-		await draftNewPage( page );
+		await draftNewPage( admin, requestUtils );
 		await addPageContent( editor, page );
 		await editor.openDocumentSettingsSidebar();
 
@@ -133,9 +134,11 @@ test.describe( 'Pages', () => {
 		} );
 		await editorSettings.getByRole( 'tab', { name: 'Page' } ).click();
 		await editorSettings
-			.getByRole( 'button', { name: 'Template options' } )
+			.getByRole( 'button', { name: /^Template: / } )
 			.click();
-		await page.getByRole( 'menuitem', { name: 'Edit template' } ).click();
+		await editorSettings
+			.getByRole( 'button', { name: 'Edit', exact: true } )
+			.click();
 		await expect(
 			editor.canvas.getByRole( 'document', {
 				name: 'Block: Content',
@@ -207,15 +210,14 @@ test.describe( 'Pages', () => {
 			)
 			.isVisible();
 
-		await editor.openDocumentSettingsSidebar();
 		// Toggle template preview to "off".
-		const templateOptionsButton = page
-			.getByRole( 'region', { name: 'Editor settings' } )
-			.getByRole( 'button', { name: 'Template options' } );
-		await templateOptionsButton.click();
-		const templatePreviewButton = page
-			.getByRole( 'menu', { name: 'Template options' } )
-			.getByRole( 'menuitemcheckbox', { name: 'Show template' } );
+		const viewButton = page
+			.getByRole( 'region', { name: 'Editor top bar' } )
+			.getByRole( 'button', { name: 'View', exact: true } );
+		await viewButton.click();
+		const templatePreviewButton = page.getByRole( 'menuitemcheckbox', {
+			name: 'Show template',
+		} );
 
 		await expect( templatePreviewButton ).toHaveAttribute(
 			'aria-checked',
@@ -241,11 +243,11 @@ test.describe( 'Pages', () => {
 			} )
 		).toBeVisible();
 
-		// Remove focus from templateOptionsButton button.
-		await editor.canvas.locator( 'body' ).click();
+		// Close the menu.
+		await page.keyboard.press( 'Escape' );
 
 		// Toggle template preview to "on".
-		await templateOptionsButton.click();
+		await viewButton.click();
 		await templatePreviewButton.click();
 		await expect( templatePreviewButton ).toHaveAttribute(
 			'aria-checked',
@@ -266,19 +268,19 @@ test.describe( 'Pages', () => {
 	} );
 
 	test( 'the writing prompt in an empty content block responds to the first click', async ( {
+		admin,
 		page,
 		editor,
+		requestUtils,
 	} ) => {
-		await draftNewPage( page );
+		await draftNewPage( admin, requestUtils );
 
 		// Show the template so the Content block wraps the writing prompt.
-		await editor.openDocumentSettingsSidebar();
 		await page
-			.getByRole( 'region', { name: 'Editor settings' } )
-			.getByRole( 'button', { name: 'Template options' } )
+			.getByRole( 'region', { name: 'Editor top bar' } )
+			.getByRole( 'button', { name: 'View', exact: true } )
 			.click();
 		await page
-			.getByRole( 'menu', { name: 'Template options' } )
 			.getByRole( 'menuitemcheckbox', { name: 'Show template' } )
 			.click();
 		await page.keyboard.press( 'Escape' );
@@ -290,7 +292,7 @@ test.describe( 'Pages', () => {
 		// A single click on the prompt inserts a paragraph and moves the
 		// caret into it; no click to select the Content block is needed.
 		await contentBlock
-			.getByRole( 'button', { name: 'Add default block' } )
+			.getByRole( 'document', { name: 'Add default block' } )
 			.click();
 		await page.keyboard.type( 'Typed after one click' );
 
@@ -305,10 +307,11 @@ test.describe( 'Pages', () => {
 		admin,
 		page,
 		editor,
+		requestUtils,
 	} ) => {
 		// Create a custom template first.
 		const templateName = 'demo';
-		await page.getByRole( 'button', { name: 'Templates' } ).click();
+		await admin.visitSiteEditor( { postType: 'wp_template' } );
 		await page.getByRole( 'button', { name: 'Add template' } ).click();
 		await page
 			.getByRole( 'button', {
@@ -333,55 +336,61 @@ test.describe( 'Pages', () => {
 		await admin.visitSiteEditor();
 
 		// Create new page that has the default template so as to swap it.
-		await draftNewPage( page );
-		await editor.openDocumentSettingsSidebar();
-		const templateOptionsButton = page
-			.getByRole( 'region', { name: 'Editor settings' } )
-			.getByRole( 'button', { name: 'Template options' } );
-		await expect( templateOptionsButton ).toHaveText( 'Single Entries' );
-		await templateOptionsButton.click();
-		await page
-			.getByRole( 'menu', { name: 'Template options' } )
-			.getByText( 'Change template' )
-			.click();
-		const templateItem = page.locator(
-			'.block-editor-block-patterns-list__item-title'
+		await draftNewPage( admin, requestUtils );
+		const summary = await openPostSummary( { editor, page } );
+		const templateButton = summary.getByRole( 'button', {
+			name: 'Edit Template',
+		} );
+		await expect( templateButton ).toHaveAccessibleDescription(
+			'Single Entries'
 		);
+		await templateButton.click();
+		const templateSelect = page.getByRole( 'combobox', {
+			name: 'Template',
+		} );
+		await templateSelect.click();
 		// Empty theme's custom template with `postTypes: ['post']`, should not be suggested.
-		await expect( templateItem ).toHaveCount( 1 );
-		await templateItem.click();
-		await expect( templateOptionsButton ).toHaveText( 'demo' );
+		await expect(
+			page.getByRole( 'listbox' ).getByRole( 'option' )
+		).toHaveText( [ 'Single Entries', templateName ] );
+		await page
+			.getByRole( 'option', { name: templateName, exact: true } )
+			.click();
+		await page.keyboard.press( 'Escape' );
+		await expect( templateButton ).toHaveAccessibleDescription(
+			templateName
+		);
 		await editor.saveSiteEditorEntities( {
 			isOnlyCurrentEntityDirty: true,
 		} );
 
 		// Now reset, and apply the default template back.
-		await templateOptionsButton.click();
-		const resetButton = page
-			.getByRole( 'menu', { name: 'Template options' } )
-			.getByText( 'Use default template' );
-		await expect( resetButton ).toBeVisible();
-		await resetButton.click();
-		await expect( templateOptionsButton ).toHaveText( 'Single Entries' );
+		await templateButton.click();
+		await templateSelect.click();
+		await page
+			.getByRole( 'option', { name: 'Single Entries', exact: true } )
+			.click();
+		await page.keyboard.press( 'Escape' );
+		await expect( templateButton ).toHaveAccessibleDescription(
+			'Single Entries'
+		);
 	} );
 
 	test( 'change template options should respect the declared `postTypes`', async ( {
+		admin,
 		page,
 		editor,
+		requestUtils,
 	} ) => {
-		await draftNewPage( page );
-		await editor.openDocumentSettingsSidebar();
-		const templateOptionsButton = page
-			.getByRole( 'region', { name: 'Editor settings' } )
-			.getByRole( 'button', { name: 'Template options' } );
-		await templateOptionsButton.click();
+		await draftNewPage( admin, requestUtils );
+		const summary = await openPostSummary( { editor, page } );
+		await summary.getByRole( 'button', { name: 'Edit Template' } ).click();
+		await page.getByRole( 'combobox', { name: 'Template' } ).click();
 		// Empty theme has only one custom template with `postTypes: ['post']`,
 		// so it should not be suggested.
 		await expect(
-			page
-				.getByRole( 'menu', { name: 'Template options' } )
-				.getByText( 'Change template' )
-		).toBeDisabled();
+			page.getByRole( 'listbox' ).getByRole( 'option' )
+		).toHaveText( [ 'Single Entries' ] );
 	} );
 
 	// Regression test for https://github.com/WordPress/gutenberg/issues/73820
@@ -396,8 +405,7 @@ test.describe( 'Pages', () => {
 			status: 'publish',
 		} );
 
-		await admin.visitSiteEditor();
-		await page.getByRole( 'button', { name: 'Pages' } ).click();
+		await admin.visitSiteEditor( { postType: 'page' } );
 
 		// Switch to table layout to access actions
 		await page.getByRole( 'button', { name: 'Layout' } ).click();
@@ -441,8 +449,7 @@ test.describe( 'Pages', () => {
 		).toBeVisible();
 
 		// Reload the page to verify the value persisted
-		await admin.visitSiteEditor();
-		await page.getByRole( 'button', { name: 'Pages' } ).click();
+		await admin.visitSiteEditor( { postType: 'page' } );
 		await page.getByRole( 'button', { name: 'Layout' } ).click();
 		await page.getByRole( 'menuitemradio', { name: 'Table' } ).click();
 

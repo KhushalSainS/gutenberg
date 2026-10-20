@@ -1,16 +1,9 @@
-/**
- * External dependencies
- */
 import type {
 	CSSProperties,
 	FocusEventHandler,
 	MouseEventHandler,
 	RefObject,
 } from 'react';
-
-/**
- * Internal dependencies
- */
 import type { BaseControlProps } from '../base-control/types';
 import type { IconType } from '../icon';
 import type { NumberControlProps } from '../number-control/types';
@@ -107,8 +100,7 @@ export type RangeControlProps = Pick<
 		/**
 		 * CSS color string for the `RangeControl` wrapper.
 		 *
-		 * @default COLORS.theme.accent
-		 * @see /packages/components/src/utils/colors-values.js
+		 * @default The component accent color
 		 */
 		color?: CSSProperties[ 'color' ];
 		/**
@@ -151,7 +143,7 @@ export type RangeControlProps = Pick<
 		 *
 		 * @default () => void
 		 */
-		onChange?: ( value?: number ) => void;
+		onChange?: ( value: number | undefined ) => void;
 		/**
 		 * Callback for when `RangeControl` input gains focus.
 		 *
@@ -207,6 +199,12 @@ export type RangeControlProps = Pick<
 		 */
 		showTooltip?: boolean;
 		/**
+		 * Adjusts the size of the control.
+		 *
+		 * @default 'default'
+		 */
+		size?: 'default' | 'compact';
+		/**
 		 * CSS color string to customize the track element's background.
 		 */
 		trackColor?: CSSProperties[ 'color' ];
@@ -225,14 +223,6 @@ export type RangeControlProps = Pick<
 		 * @default true
 		 */
 		withInputField?: boolean;
-		/**
-		 * Do not throw a warning for the deprecated 36px default size.
-		 * For internal components of other components that already throw the warning.
-		 *
-		 * @deprecated Default behavior since WordPress 7.1. Prop can be safely removed.
-		 * @ignore
-		 */
-		__shouldNotWarnDeprecated36pxSize?: boolean;
 	};
 
 export type RailProps = MarksProps & {

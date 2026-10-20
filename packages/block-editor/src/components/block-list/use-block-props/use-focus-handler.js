@@ -1,18 +1,10 @@
-/**
- * WordPress dependencies
- */
 import { useSelect, useDispatch } from '@wordpress/data';
 import {
 	useRefEffect,
 	privateApis as composePrivateApis,
 } from '@wordpress/compose';
-
-/**
- * Internal dependencies
- */
 import { isInsideRootBlock } from '../../../utils/dom';
 import { store as blockEditorStore } from '../../../store';
-import { isShiftClickInProgress } from '../../writing-flow/utils';
 import { unlock } from '../../../lock-unlock';
 
 const { subscribeDelegatedListener } = unlock( composePrivateApis );
@@ -23,8 +15,12 @@ const { subscribeDelegatedListener } = unlock( composePrivateApis );
  * @param {string} clientId Block client ID.
  */
 export function useFocusHandler( clientId ) {
-	const { isBlockSelected, isBlockMultiSelected } =
-		useSelect( blockEditorStore );
+	const {
+		isBlockSelected,
+		isBlockMultiSelected,
+		isAncestorMultiSelected,
+		isMultiSelecting,
+	} = useSelect( blockEditorStore );
 	const { selectBlock, selectionChange } = useDispatch( blockEditorStore );
 
 	return useRefEffect(
@@ -48,12 +44,14 @@ export function useFocusHandler( clientId ) {
 					return;
 				}
 
-				// Never select on the focus fired by a shift+click: the
-				// browser can focus the common editable ancestor of the
-				// range (e.g. a group block), and any selection re-render
-				// mid gesture destroys the native selection being made. The
-				// selection observer builds the multi-selection on mouseup.
-				if ( isShiftClickInProgress() ) {
+				// Never select on the focus fired during a selection
+				// gesture (a shift+click, marked by the selection observer
+				// with startMultiSelect). The browser can focus the common
+				// editable ancestor of the range (e.g. a group block), and
+				// any selection re-render mid gesture destroys the native
+				// selection being made. The observer builds the
+				// multi-selection on mouseup.
+				if ( isMultiSelecting() ) {
 					return;
 				}
 
@@ -61,8 +59,12 @@ export function useFocusHandler( clientId ) {
 				// not collapse it. Focus can land on the clicked block after
 				// the multi-selection was built: the focus event of a
 				// shift+click is not ordered consistently against its
-				// mouseup across browsers.
-				if ( isBlockMultiSelected( clientId ) ) {
+				// mouseup across browsers. A press inside a selected block
+				// may start a drag of the selection; the click collapses it.
+				if (
+					isBlockMultiSelected( clientId ) ||
+					isAncestorMultiSelected( clientId )
+				) {
 					return;
 				}
 
