@@ -90,7 +90,6 @@ jobs:
                     - views
                     # Other packages
                     - theme
-                    - theme-build-tools
                     - components
                     - private-apis
                     - widget-dashboard
@@ -116,6 +115,7 @@ jobs:
                     - readable-js-assets-webpack-plugin
                     - scripts
                     - stylelint-config
+                    - theme-build-tools
         steps:
             - name: 'Get PR commit count'
               env:
