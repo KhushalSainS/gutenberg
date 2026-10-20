@@ -479,9 +479,13 @@ export type ActionOf< Type extends Action[ 'type' ] > = Extract<
 
 /**
  * An entity action, with the entity's record key that the entity reducer
- * injects.
+ * injects. An action's own `key` overrides the injected one.
  */
-export type KeyedEntityAction = Action & { key: ItemId };
+export type KeyedEntityAction = Action extends infer A
+	? A extends { key: unknown }
+		? A
+		: A & { key: ItemId }
+	: never;
 
 /**
  * The state of the records of one entity.
