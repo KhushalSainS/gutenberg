@@ -14,6 +14,7 @@
 
 ### Bug Fixes
 
+-   `MenuItem`: Accept the `href` prop in the types, which renders the item as a link ([#TBD](https://github.com/WordPress/gutenberg/pull/TBD)).
 -   `MenuItemsChoice`: Make the `onHover` prop optional, as it defaults to a no-op ([#85033](https://github.com/WordPress/gutenberg/pull/85033)).
 
 ### Internal
