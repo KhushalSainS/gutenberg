@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Internal
+
+-   Point the page templates' preload comments at the TypeScript `entities.ts` in `@wordpress/core-data` ([#85070](https://github.com/WordPress/gutenberg/pull/85070)).
+
 ## 0.26.0 (2026-10-20)
 
 ### Breaking Changes
